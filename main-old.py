@@ -1,4 +1,5 @@
 from asyncore import write
+from chunk import Chunk
 import PySimpleGUI as sg
 import pyaudio
 import numpy as np
@@ -7,12 +8,16 @@ import numpy as np
 # vgazw olo to visualization
 # grafw ton algorithmo gia na vriskei ta bpms
 # diavazw perissotera gia to pyaudio k ta fft
-from arduino import write_read
-from arduino import beat
-import threading 
 
-def create_thread():
-	return threading.Thread(target=beat, args=('5',))
+LED = False
+
+if LED == True:
+    from arduino import write_read
+    from arduino import beat
+    import threading 
+
+    def create_thread():
+        return threading.Thread(target=beat, args=('5',))
 
 
 """ RealTime Audio Basic FFT plot """
@@ -24,11 +29,12 @@ _VARS = {'window': False,
 # pysimpleGUI INIT:
 AppFont = 'Any 16'
 sg.theme('Black')
-CanvasSizeWH = 500
+CanvasSizeW = 900
+CanvasSizeH = 500
 
-layout = [[sg.Graph(canvas_size=(CanvasSizeWH, CanvasSizeWH),
+layout = [[sg.Graph(canvas_size=(CanvasSizeW, CanvasSizeH),
                     graph_bottom_left=(-16, -16),
-                    graph_top_right=(116, 116),
+                    graph_top_right=(250, 250),
                     background_color='#B9B9B9',
                     key='graph')],
           [sg.ProgressBar(4000, orientation='h',
@@ -55,10 +61,17 @@ beaf1 = 0
 
 
 def drawAxis():
-    graph.DrawLine((0, 50), (100, 50))  # x Axis
+    # first graph
+    graph.DrawLine((0, 0), (100, 0))  # x Axis
     graph.DrawLine((0, 0), (0, 100))  # y Axis
+    
+    # second graph
+    graph.DrawLine((120, 0), (220, 0))  # x Axis
+    graph.DrawLine((120, 0), (120, 100))  # y Axis
+    
+    
 
-    graph.DrawLine((0, 0), (100, 0))
+    
 
 
 def drawTicks():
@@ -136,8 +149,9 @@ def drawFFT():
         if i == beaf1 and x - preV > 30 and x > (avgV - 50):
             dum += 1
             print('beat-' + str(i) + '-' + str(dum))
-            t = create_thread()
-            t.start()
+            if LED == True:
+                t = create_thread()
+                t.start()
             
 
 
@@ -145,10 +159,11 @@ def drawFFT():
             preV = x
             # print(int(x))
 
+def drawAudio(): 
+    dataInt = struct.unpack(str(CHUNK)+'h', _VARS['audioData'])
+
 
 # PYAUDIO STREAM :
-
-
 def stop():
     if _VARS['stream']:
         _VARS['stream'].stop_stream()
